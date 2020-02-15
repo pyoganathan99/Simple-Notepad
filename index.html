@@ -14,10 +14,109 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.51.0/codemirror.min.js"
         integrity="sha256-nSKfNYsl/gyXisZDZFKVh+LvOHEz65JIhgjYfwaqGDE=" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto+Mono|Tomorrow&display=swap" rel="stylesheet">
 </head>
 
+<style>
+    .main-title {
+        font-family: 'Tomorrow', sans-serif;
+        color: #2196f3;
+    }
+
+    .CodeMirror {
+        height: 100%;
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    #notes-list ul {
+        padding: 0;
+    }
+
+    #notes-list li {
+        list-style: none;
+        padding: 12px 24px;
+        transition-duration: 300ms;
+        cursor: pointer;
+    }
+
+    #notes-list li:hover,
+    #notes-list li:focus {
+        background: #eeeeee;
+    }
+
+    #notes-list li.active {
+        background: #f8bbd0;
+    }
+</style>
+
 <body>
-    <span class="text-primary">Hello</span>
+    <main class="row no-gutters vh-100">
+        <div class="col col-3 h-100 bg-light">
+            <div class="m-4">
+                <h3 class="main-title">
+                    📝 YottaPad
+                </h3>
+                <span>Keep calm and write something</span>
+            </div>
+            <div id="notes-list">
+                <ul>
+                    <li v-for="(note, index) in notes" v-bind:class="[ index == current ? 'active' : '' ]"
+                        v-on:click="activate(index)">
+                        {{note.title}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col col-9 h-100 shadow">
+            <textarea id="main-textarea" class="h-100"></textarea>
+        </div>
+    </main>
 </body>
+
+<script>
+
+    const textarea = document.getElementById('main-textarea');
+
+    let app = new Vue({
+        el: '#notes-list',
+        data: {
+            current: 0,
+            notes: [
+                { title: 'Note 1', content: '' },
+                { title: 'Business idea', content: '' },
+                { title: 'Todo stuff', content: '' }
+            ]
+        },
+        methods: {
+            activate: function (index) {
+                this.current = index;
+                let note = this.notes[this.current];
+                let position = note.cursorPosition || 0;
+                editor.setValue(note.content);
+                editor.setCursor(position);
+                editor.focus();
+
+                // Reassigning because setValue() triggers change event
+                note.cursorPosition = position;
+            }
+        }
+    });
+
+    let editor = CodeMirror.fromTextArea(textarea, {
+        lineNumbers: true,
+        readOnly: false,
+    });
+    editor.focus();
+
+    editor.on('change', () => {
+        let note = app.notes[app.current];
+        note.content = editor.getValue();
+        console.log(editor.getCursor());
+        note.cursorPosition = editor.getCursor();
+    })
+</script>
 
 </html>
